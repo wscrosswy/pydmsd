@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+attrs = "*"
+rdflib = "*"
+click = "*"
+owlready2 = "*"
+pytest = "*"
+
+[dev-packages]
+pydmsd = {path = ".", editable = true}
+pytest = "*"
+
+[requires]
+python_version = "3.9"

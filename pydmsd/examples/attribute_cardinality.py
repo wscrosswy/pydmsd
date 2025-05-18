@@ -15,8 +15,4 @@ Car.add_exactly_cardinality(tire_pressure, 4)
 Motorcycle.add_exactly_cardinality(tire_pressure, 2)
 
 # check compatibility
-is_compatible = reasoner.check_compatibility(Car, Motorcycle)
-
-# explain compatibility
-if not is_compatible:
-    print(reasoner.explain_incompatibilities(Car, Motorcycle))
+reasoner.detect_and_explain_incompatibilities(Car, Motorcycle)

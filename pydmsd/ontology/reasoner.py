@@ -77,7 +77,7 @@ def check_compatibility(class1, class2) -> bool:
 
 
 def _explain_explicit_disjointness(class1, class2):
-    """Finds explicit disjoint axioms between class1 and class2."""
+    """Detect explicit disjoint axioms between class1 and class2."""
     explicit_disjoint_axioms = []
 
     if hasattr(class1.owl_cls, "disjoint_with") and class2.owl_cls in class1.owl_cls.disjoint_with:
@@ -90,6 +90,22 @@ def _explain_explicit_disjointness(class1, class2):
         )
 
     return explicit_disjoint_axioms
+
+
+def _explain_property_presence_conflicts(class1, class2):
+    """Detect required properties in one class missing from the other."""
+    missing = []
+    missing_from_2 = class1.required_properties - class2.declared_properties
+    for prop in missing_from_2:
+        missing.append(
+            f"{class1.name} requires property '{prop.name}' which is missing in {class2.name}."
+        )
+    missing_from_1 = class2.required_properties - class1.declared_properties
+    for prop in missing_from_1:
+        missing.append(
+            f"{class2.name} requires property '{prop.name}' which is missing in {class1.name}."
+        )
+    return missing
 
 
 def _cardinalities_overlap(card1: Cardinality, card2: Cardinality) -> bool:
@@ -125,6 +141,7 @@ def _explain_cardinality_conflicts(class1, class2):
 class IncompatibilityExplanation:
     explicit_disjoint_axioms: ty.List[str]
     cardinality_conflicts: ty.List[str]
+    property_presence_conflicts: ty.List[str]
 
     def __str__(self):
         parts = ["Classes are disjoint due to:"]
@@ -135,6 +152,10 @@ class IncompatibilityExplanation:
         if self.cardinality_conflicts:
             parts.append("  Cardinality Conflicts:")
             for reason in self.cardinality_conflicts:
+                parts.append(f"    - {reason}")
+        if self.property_presence_conflicts:
+            parts.append("  Missing Required Properties:")
+            for reason in self.property_presence_conflicts:
                 parts.append(f"    - {reason}")
 
         return "\n".join(parts)
@@ -147,5 +168,17 @@ def explain_incompatibilities(class1, class2) -> IncompatibilityExplanation:
 
     return IncompatibilityExplanation(
         explicit_disjoint_axioms=_explain_explicit_disjointness(class1, class2),
-        cardinality_conflicts=_explain_cardinality_conflicts(class1, class2)
+        cardinality_conflicts=_explain_cardinality_conflicts(class1, class2),
+        property_presence_conflicts=_explain_property_presence_conflicts(class1, class2)
     )
+
+def detect_and_explain_incompatibilities(class1, class2):
+    """
+    Determine if `class1` and `class2` are compatible and
+    explain the incompatibilities if they are not.
+    """
+    is_compatible = check_compatibility(class1, class2)
+    if is_compatible:
+        print(f"No incompatibilities detected between {class1.name} and {class2.name}.")
+    else:
+        print(explain_incompatibilities(class1, class2))

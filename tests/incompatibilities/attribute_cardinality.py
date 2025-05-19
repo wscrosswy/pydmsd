@@ -9,8 +9,10 @@ def test_attribute_cardinality():
     Car = ontology.define_class("Car")
     Motorcycle = ontology.define_class("Motorcycle")
 
-    # define a shared data property
-    tire_pressure = ontology.define_data_property("tirePressure", domain=None, range_=[float])
+    Pressure = ontology.define_class("Pressure")
+
+    # define a shared property
+    tire_pressure = ontology.define_object_property("tirePressure", domain=None, range_=Pressure)
 
     # add conflicting cardinality restrictions
     Car.add_exactly_cardinality(tire_pressure, 4)

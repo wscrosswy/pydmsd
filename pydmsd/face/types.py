@@ -15,6 +15,15 @@ class Characteristic:
     value_type: ty.Any
 
 
+class Observable:
+    def __init__(self, name: str, model: "FaceDataModel"):
+        self.name = name
+        self.model = model
+
+        # Create the underlying ontology class
+        self.ontology_class = self.model.ontology.define_class(name)
+
+
 class Entity:
     def __init__(self, name: str, model: "FaceDataModel"):
         self.name = name
@@ -29,18 +38,14 @@ class Entity:
         self.characteristics.append(char)
 
         # Create the underlying ontology property and restrictions
-        if isinstance(value_type, Entity):
-            prop = self.model.ontology.define_object_property(name)
-            filler = value_type.ontology_class
-        else:
-            prop = self.model.ontology.define_data_property(name, range_=[value_type])
-            filler = value_type
+        prop = self.model.ontology.define_object_property(f"{self.name}.{name}", range_=value_type.ontology_class)
+        range_type = value_type.ontology_class.owl_cls
 
         if lower_bound == upper_bound:
-            self.ontology_class.add_exactly_cardinality(prop, lower_bound, filler)
+            self.ontology_class.add_exactly_cardinality(prop, lower_bound, range_type)
         else:
-            self.ontology_class.add_min_cardinality(prop, lower_bound, filler)
-            self.ontology_class.add_max_cardinality(prop, upper_bound, filler)
+            self.ontology_class.add_min_cardinality(prop, lower_bound, range_type)
+            self.ontology_class.add_max_cardinality(prop, upper_bound, range_type)
 
         return char
 
@@ -48,9 +53,15 @@ class Entity:
 class FaceDataModel:
     def __init__(self):
         self.entities = []
+        self.observables = []
         self.ontology = Ontology()
 
     def create_entity(self, name: str):
         entity = Entity(name, model=self)
         self.entities.append(entity)
         return entity
+
+    def create_observable(self, name: str):
+        observable = Observable(name, model=self)
+        self.observables.append(observable)
+        return observable

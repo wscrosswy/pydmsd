@@ -17,78 +17,78 @@ class Cardinality:
 
 class OntologyClass:
     """Abstracts owlready2 class with basic ontology class operations."""
-    def __init__(self, name, owl_cls, ontology):
-        self.name = name
-        self.owl_cls = owl_cls
-        self.ontology = ontology
+    def __init__(self, name: str, owl_cls: owl.ThingClass, ontology: 'Ontology'):
+        self.name: str = name
+        self.owl_cls: owl.ThingClass = owl_cls
+        self.ontology: 'Ontology' = ontology
 
-    def add_disjoint_class(self, other):
+    def add_disjoint_class(self, other: 'OntologyClass') -> None:
         """Declare this class to be disjoint with `other`."""
         with self.ontology.owl_ontology:
             self.owl_cls.disjoint_with.append(other.owl_cls)
 
-    def add_equivalent_class(self, other):
+    def add_equivalent_class(self, other: 'OntologyClass') -> None:
         """Declare this class equivalent to `other`."""
         with self.ontology.own_ontology:
             self.owl_cls.equivalent_to.append(other.owl_cls)
 
-    def add_superclass(self, supercls):
+    def add_superclass(self, supercls: 'OntologyClass') -> None:
         """Add a superclass."""
         with self.ontology.owl_ontology:
             self.owl_cls.is_a.append(supercls.owl_cls)
 
-    def add_min_cardinality(self, prop, cardinality, filler=None):
+    def add_min_cardinality(self, prop: owl.PropertyClass, cardinality: int, range_type: ty.Optional[owl.ThingClass] = None) -> None:
         """Add a minimum cardinality restriction."""
         with self.ontology.owl_ontology:
-            restriction = prop.min(cardinality, filler)
+            restriction = prop.min(cardinality, range_type)
             self.owl_cls.is_a.append(restriction)
 
-    def add_max_cardinality(self, prop, cardinality, filler=None):
+    def add_max_cardinality(self, prop: owl.PropertyClass, cardinality: int, range_type: ty.Optional[owl.ThingClass] = None) -> None:
         """Add a maximum cardinality restriction."""
         with self.ontology.owl_ontology:
-            restriction = prop.max(cardinality, filler)
+            restriction = prop.max(cardinality, range_type)
             self.owl_cls.is_a.append(restriction)
 
-    def add_exactly_cardinality(self, prop, cardinality, filler=None):
+    def add_exactly_cardinality(self, prop: owl.PropertyClass, cardinality: int, range_type: ty.Optional[owl.ThingClass] = None) -> None:
         """Add an exact cardinality restriction."""
         with self.ontology.owl_ontology:
-            restriction = prop.exactly(cardinality, filler)
+            restriction = prop.exactly(cardinality, range_type)
             self.owl_cls.is_a.append(restriction)
 
-    def add_has_value(self, prop, value):
+    def add_has_value(self, prop: owl.PropertyClass, value: ty.Any) -> None:
         """Add a hasValue restriction."""
         with self.ontology.owl_ontology:
             restriction = prop.value(value)
             self.owl_cls.is_a.append(restriction)
 
-    def add_only(self, prop, filler):
+    def add_only(self, prop: owl.PropertyClass, range_type: owl.ThingClass) -> None:
         """Add an AllValuesFrom (only) restriction."""
         with self.ontology.owl_ontology:
-            restriction = prop.only(filler)
+            restriction = prop.only(range_type)
             self.owl_cls.is_a.append(restriction)
 
-    def add_some(self, prop, filler):
+    def add_some(self, prop: owl.PropertyClass, range_type: owl.ThingClass) -> None:
         """Add a SomeValuesFrom (some) restriction."""
         with self.ontology.owl_ontology:
-            restriction = prop.some(filler)
+            restriction = prop.some(range_type)
             self.owl_cls.is_a.append(restriction)
 
     @cached_property
-    def restrictions(self) -> ty.Set[owl.Property]:
+    def restrictions(self) -> ty.Set[owl.Restriction]:
         return {r for a in self.owl_cls.ancestors() for r in a.is_a if isinstance(r, owl.Restriction)}
 
     @cached_property
-    def declared_properties(self):
+    def declared_properties(self) -> ty.Set[owl.PropertyClass]:
         """Set of all properties used in restrictions on this class or any of its ancestors."""
         return {r.property for r in self.restrictions}
 
     @cached_property
-    def cardinalities(self) -> ty.Dict[owl.Property, Cardinality]:
+    def cardinalities(self) -> ty.Dict[owl.PropertyClass, Cardinality]:
         """
         Constructs map of each property (inherited or explicitly declared) to a (min, max) cardinality tuple
         based on the smallest min and largest max restriction for each property.
         """
-        cardinality_map = collections.defaultdict(Cardinality)
+        cardinality_map: ty.DefaultDict[owl.PropertyClass, Cardinality] = collections.defaultdict(Cardinality)
 
         for r in self.restrictions:
             cardinality = cardinality_map[r.property]
@@ -103,7 +103,7 @@ class OntologyClass:
         return cardinality_map
 
     @cached_property
-    def required_properties(self) -> ty.Set[owl.Property]:
+    def required_properties(self) -> ty.Set[owl.PropertyClass]:
         """All properties with a min cardinality restriction >= 1"""
         return {p for p, card in self.cardinalities.items() if card.min >= 1}
 
@@ -157,3 +157,4 @@ class Ontology:
             iri=owl_ontology.base_iri,
             owl_ontology=owl_ontology
         )
+

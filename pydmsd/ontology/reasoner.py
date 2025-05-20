@@ -3,6 +3,7 @@ import owlready2 as owl
 import typing as ty
 
 import pydmsd.face.types as face
+import pydmsd.fhir.types as fhir
 from .types import Cardinality, Ontology, OntologyClass
 
 
@@ -14,7 +15,7 @@ def run_reasoner(ontology: Ontology):
 
 
 def _unwrap_ontology_class(obj):
-    if isinstance(obj, face.Entity):
+    if isinstance(obj, face.Entity) or isinstance(obj, fhir.Resource):
         return obj.ontology_class
     elif isinstance(obj, OntologyClass):
         return obj

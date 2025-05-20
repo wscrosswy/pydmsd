@@ -95,7 +95,7 @@ class OntologyClass:
 
             if r.type == owl.MIN and r.cardinality > cardinality.min:
                 cardinality.min = r.cardinality
-            elif r.type == owl.MAX and r.cardinality < cardinality.max:
+            elif r.type == owl.MAX and cardinality.max is not None and r.cardinality < cardinality.max:
                 cardinality.max = r.cardinality
             elif r.type == owl.EXACTLY:
                 cardinality.min = cardinality.max = r.cardinality

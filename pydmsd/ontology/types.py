@@ -15,6 +15,12 @@ class Cardinality:
     max: ty.Optional[int] = None  # None means unbounded
 
 
+class OntologyProperty:
+    def __init__(self, name: str, owl_prop: owl.PropertyClass):
+        self.name = name
+        self.owl_prop = owl_prop
+
+
 class OntologyClass:
     """Abstracts owlready2 class with basic ontology class operations."""
     def __init__(self, name: str, owl_cls: owl.ThingClass, ontology: 'Ontology'):
@@ -25,7 +31,7 @@ class OntologyClass:
     def add_disjoint_class(self, other: 'OntologyClass') -> None:
         """Declare this class to be disjoint with `other`."""
         with self.ontology.owl_ontology:
-            self.owl_cls.disjoint_with.append(other.owl_cls)
+            owl.AllDisjoint([self.owl_cls, other.owl_cls])
 
     def add_equivalent_class(self, other: 'OntologyClass') -> None:
         """Declare this class equivalent to `other`."""
@@ -108,42 +114,44 @@ class OntologyClass:
         return {p for p, card in self.cardinalities.items() if card.min >= 1}
 
 
-@attrs.define
 class Ontology:
     """Abstracts owlready2 ontology with basic ontology operations."""
-    iri: str = "http://example.org/ontology.owl"
-    owl_ontology: owl.Ontology = owl.get_ontology(iri)
+    def __init__(self, iri: str = "http://example.org/ontology.owl"):
+        # Generic
+        self.iri: str = iri
+        self.owl_ontology: owl.Ontology =  owl.get_ontology(iri)
 
-    def define_class(self, name, parent=None):
-        """Define a new ontology class."""
-        with self.owl_ontology:
-            bases = (parent.owl_cls,) if parent else (owl.Thing,)
-            owl_cls = types.new_class(name, bases=bases)
-        return OntologyClass(name, owl_cls, self)
+        # Extand core OWL semantics to name Conceptual, Logical, and Platform concerns
+        # Conceptual
+        self.observable = self.define_class("Observable")
 
-    def define_object_property(self, name, domain=None, range_=None):
-        """Define a new object property."""
-        with self.owl_ontology:
-            obj_prop = types.new_class(name, (owl.ObjectProperty,))
-            if domain:
-                obj_prop.domain = [domain.owl_cls]
-            if range_:
-                obj_prop.range = [range_.owl_cls]
-        return obj_prop
+        # Logical
+        self.measurement_system = self.define_class("MeasurementSystem")
+        self.unit = self.define_class("Unit")
+        self.has_unit = self.define_object_property("hasUnit", domain=self.measurement_system, range_=self.unit)
+        # TODO precision, using class hierarchy of precision values for range of hasPrecision object property
 
-    def define_data_property(self, name, domain=None, range_=None):
-        """Define a new data property."""
-        with self.owl_ontology:
-            data_prop = types.new_class(name, (owl.DataProperty,))
-            if domain:
-                data_prop.domain = [domain.owl_cls]
-            if range_:
-                data_prop.range = [range_] if not isinstance(range_, list) else range_
-            return data_prop
+        # Platform
+        self.integer_value_type = self.define_class("IntegerValueType")
+        self.float_value_type = self.define_class("FloatValueType")
+        self.double_value_type = self.define_class("DoubleValueType")
+        self.string_value_type = self.define_class("StringValueType")
+        self.enumeration_value_type = self.define_class("EnumerationValueType")
+        self.value_types = [
+            self.integer_value_type,
+            self.float_value_type,
+            self.double_value_type,
+            self.string_value_type,
+            self.enumeration_value_type
+        ]
+        #self.declare_all_disjoint(self.value_types)
+        self.has_value_type = self.define_object_property(
+            "hasValueType",
+            domain=self.measurement_system,
+            range_=self.value_types)
 
-    def destroy(self, obj):
-        """Destroy `obj` (a class, property, etc.)."""
-        self.owl_ontology.destroy(obj)
+    def destroy(self, ontology_class):
+        owl.destroy_entity(ontology_class.owl_cls)
 
     def save(self, path, format="rdfxml"):
         """Save the ontology to a file at `path` (default RDF/XML format)."""
@@ -158,3 +166,59 @@ class Ontology:
             owl_ontology=owl_ontology
         )
 
+    # Generic
+    def define_class(self, name, parent=None):
+        """Define a new ontology class."""
+        with self.owl_ontology:
+            bases = (parent.owl_cls,) if parent else (owl.Thing,)
+            owl_cls = types.new_class(name, bases=bases)
+        return OntologyClass(name, owl_cls, self)
+
+    def define_object_property(self, name, domain=None, range_=None):
+        """Define a new object property."""
+        with self.owl_ontology:
+            obj_prop = types.new_class(name, (owl.ObjectProperty,))
+            if domain:
+                obj_prop.domain = [domain.owl_cls]
+            if range_:
+                obj_prop.range = [cls.owl_cls for cls in range_] if isinstance(range_, list) else [range_.owl_cls]
+        return obj_prop
+
+    def define_data_property(self, name, domain=None, range_=None):
+        """Define a new data property."""
+        with self.owl_ontology:
+            data_prop = types.new_class(name, (owl.DataProperty,))
+            if domain:
+                data_prop.domain = [domain.owl_cls]
+            if range_:
+                data_prop.range = [range_] if not isinstance(range_, list) else range_
+            return data_prop
+
+    def declare_all_disjoint(self, classes):
+        """Declare all classes in `classes` to be disjoint."""
+        with self.owl_ontology:
+            for cls1, cls2 in zip(classes, classes[1:]):
+                cls1.add_disjoint_class(cls2)
+
+    # Conceptual
+    def define_observable(self, name):
+        return self.define_class(name, parent=self.observable)
+
+    # Logical
+    def define_unit(self, name):
+        return self.define_class(name, parent=self.unit)
+
+    def define_measurement_system(
+            self,
+            name,
+            observable: OntologyClass,
+            unit: OntologyClass,
+            value_type: ty.Optional[OntologyClass]=None,
+    ) -> OntologyClass:
+        ms = self.define_class(name, parent=self.measurement_system)
+        ms.add_superclass(observable)
+        ms.add_exactly_cardinality(self.has_unit, 1, unit.owl_cls)
+        ms.add_only(self.has_unit, unit.owl_cls)
+        if value_type:
+            ms.add_exactly_cardinality(self.has_value_type, 1, value_type.owl_cls)
+        return ms

@@ -24,9 +24,12 @@ The `face` subpackage contains:
 -- Conceptual
 Temperature Observable -> Class `Temperature`
 Engine Entity -> OWL class `Engine`
-Engine temp Characteristic -> class `Engine` has `hasTemperature` class with range restricted to Temperature and cardinality restriction 1..1
+Engine temp Characteristic -> ObjectProperty Engine_hasTemperature
+                           -> universal restriction on `Engine` that Engine_hasTemperature range is EXACTLY 1 and ONLY Temperature
 -- Logical
-MeasurementSystem TemperatureInDegreesCelsius -> OWL class `TemperatureInDegreesCelsius` (subclass of `MeasurementSystem` and `Temperature`)
-                                              -> add required cardinality & `DegreesFahrenheit` range restriction
-Entity `MyLogicalEngine` - add `hasTemperature` range restriction `TemperatureInDegreesCelsius`
+Unit Celsius -> OWL class `Celsius` (subclass of OWL class `Unit`)
+MeasurementSystem TemperatureInDegreesCelsius -> OWL class `TemperatureInDegreesCelsius` (subclass of OWL classes `MeasurementSystem`, `Temperature`)
+                                              -> universal restriction on `TemperatureInDegreesCelsius` that hasUnit range is EXACT 1 and ONLY Celsius
+Entity `MyLogicalEngine` - add universal restriction on `Engine` class that `Engine_hasTemperature` range is EXACTLY 1 and ONLY `TemperatureInDegreesCelsius`
 -- Platform
+TODO

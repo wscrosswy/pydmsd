@@ -144,11 +144,12 @@ class Ontology:
             self.string_value_type,
             self.enumeration_value_type
         ]
-        #self.declare_all_disjoint(self.value_types)
+        self.declare_all_disjoint(self.value_types)
         self.has_value_type = self.define_object_property(
             "hasValueType",
             domain=self.measurement_system,
-            range_=self.value_types)
+            range_=self.value_types
+        )
 
     def destroy(self, ontology_class):
         owl.destroy_entity(ontology_class.owl_cls)
@@ -175,13 +176,13 @@ class Ontology:
         return OntologyClass(name, owl_cls, self)
 
     def define_object_property(self, name, domain=None, range_=None):
-        """Define a new object property."""
+        """Define a new object property. Range will be the union of classes in `range_`"""
         with self.owl_ontology:
             obj_prop = types.new_class(name, (owl.ObjectProperty,))
             if domain:
                 obj_prop.domain = [domain.owl_cls]
             if range_:
-                obj_prop.range = [cls.owl_cls for cls in range_] if isinstance(range_, list) else [range_.owl_cls]
+                obj_prop.range = [owl.Or([cls.owl_cls for cls in range_])] if isinstance(range_, list) else [range_.owl_cls]
         return obj_prop
 
     def define_data_property(self, name, domain=None, range_=None):
@@ -197,8 +198,7 @@ class Ontology:
     def declare_all_disjoint(self, classes):
         """Declare all classes in `classes` to be disjoint."""
         with self.owl_ontology:
-            for cls1, cls2 in zip(classes, classes[1:]):
-                cls1.add_disjoint_class(cls2)
+            owl.AllDisjoint([cls.owl_cls for cls in classes])
 
     # Conceptual
     def define_observable(self, name):
@@ -213,12 +213,9 @@ class Ontology:
             name,
             observable: OntologyClass,
             unit: OntologyClass,
-            value_type: ty.Optional[OntologyClass]=None,
     ) -> OntologyClass:
         ms = self.define_class(name, parent=self.measurement_system)
         ms.add_superclass(observable)
         ms.add_exactly_cardinality(self.has_unit, 1, unit.owl_cls)
         ms.add_only(self.has_unit, unit.owl_cls)
-        if value_type:
-            ms.add_exactly_cardinality(self.has_value_type, 1, value_type.owl_cls)
         return ms

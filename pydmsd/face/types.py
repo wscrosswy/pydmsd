@@ -39,7 +39,7 @@ class Entity:
 
     def create_characteristic(self, name, lower_bound, upper_bound, value_type):
         # Create the underlying ontology property and restrictions
-        owl_prop = self.model.ontology.define_object_property(f"{self.name}.{name}", range_=value_type.ontology_class)
+        owl_prop = self.model.ontology.define_object_property(f"{self.name}_{name}", range_=value_type.ontology_class)
 
         owl_range_type = value_type.ontology_class.owl_cls
 
@@ -86,7 +86,7 @@ class MeasurementSystem:
         self.model = model
 
         # Create the underlying ontology class
-        self.ontology_class = self.model.ontology.define_measurement_system(name=name, unit=unit, value_type=value_type)
+        self.ontology_class = self.model.ontology.define_measurement_system(name=name, unit=unit)
 
 
 class FaceDataModel:
@@ -108,6 +108,9 @@ class FaceDataModel:
     def create_unit(self, name) -> Unit:
         return self._create_element(Unit, name)
 
-    def create_measurement_system(self, name, observable, unit, value_type=None) -> MeasurementSystem:
-        return self.ontology.define_measurement_system(name, observable.ontology_class, unit.ontology_class, value_type.ontology_class if value_type else None)
+    def create_measurement_system(self, name, observable, unit) -> MeasurementSystem:
+        return self.ontology.define_measurement_system(name, observable.ontology_class, unit.ontology_class)
+
+    def create_measurement_system_b(self, name, observable, unit) -> MeasurementSystem:
+        return self.ontology.define_measurement_system_b(name, observable.ontology_class, unit.ontology_class)
 

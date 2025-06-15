@@ -3,7 +3,7 @@ import owlready2 as owl
 import typing as ty
 
 import pydmsd.face.types as face
-import pydmsd.fhir.types as fhir
+import pydmsd.fhir.fhir_types as fhir
 from .types import Cardinality, Ontology, OntologyClass
 
 

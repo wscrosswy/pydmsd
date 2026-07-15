@@ -42,19 +42,8 @@ def test_logical_inconsistency():
                     value=ontology.FloatValueType
                 )
             ),
-            owl.Restriction(
-                Property=ontology.Helicopter_rotorSpeed,
-                type=owl.EXACTLY,
-                cardinality=1,
-                value=owl.Restriction(
-                    Property=ontology.hasValueType,
-                    type=owl.EXACTLY,
-                    cardinality=1,
-                    value=ontology.FloatValueType
-                )
-            )
         ])
-        ontology.Helicopter_A.is_a.extend([
+        ontology.Helicopter_B.is_a.extend([
             owl.Restriction(
                 Property=ontology.Helicopter_rotorSpeed,
                 type=owl.ONLY,
@@ -64,18 +53,8 @@ def test_logical_inconsistency():
                     value=ontology.IntegerValueType
                 )
             ),
-            owl.Restriction(
-                Property=ontology.Helicopter_rotorSpeed,
-                type=owl.EXACTLY,
-                cardinality=1,
-                value=owl.Restriction(
-                    Property=ontology.hasValueType,
-                    type=owl.EXACTLY,
-                    cardinality=1,
-                    value=ontology.IntegerValueType
-                )
-            )
         ])
+        owl.AllDisjoint([ontology.IntegerValueType, ontology.FloatValueType])
 
     assert not reasoner.check_compatibility(Helicopter_A, Helicopter_B)
 

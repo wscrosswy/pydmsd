@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: PyDMSD
+Version: 1.0
+Summary: Python App for Analyzing Semantic Data Models
+Home-page: https://www.github.com/scroswy
+Author: Spencer Crosswy
+Author-email: spencer.crosswy@gmail.com
+Requires-Python: >=3.9
+Dynamic: author
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: requires-python
+Dynamic: summary

@@ -44,7 +44,7 @@ class Entity:
         owl_range_type = value_type.ontology_class.owl_cls
 
         if lower_bound and upper_bound and lower_bound == upper_bound:
-            self.ontology_class.add_exactly_cardinality(owl_prop, lower_bound, owl_range_type)
+            self.ontology_class.add_exactly_cardinality(owl_prop, lower_bound)
         elif lower_bound:
             self.ontology_class.add_min_cardinality(owl_prop, lower_bound, owl_range_type)
         elif upper_bound:

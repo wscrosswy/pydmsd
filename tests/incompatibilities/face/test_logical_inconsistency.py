@@ -13,10 +13,6 @@ def test_logical_inconsistency():
     Helicopter_A = Helicopter.create_specialization("Helicopter_A")
     Helicopter_B = Helicopter.create_specialization("Helicopter_B")
 
-    assert reasoner.check_compatibility(Helicopter_A, Helicopter_B)
-
-    print(reasoner.explain_incompatibilities(Helicopter_A, Helicopter_B))
-
     # Logical
     Hertz = model.create_unit("Hertz")
     RotationsPerMinute = model.create_unit("RotationsPerMinute")
@@ -29,6 +25,7 @@ def test_logical_inconsistency():
     Helicopter_B.ontology_class.add_only(rotorSpeed, RotorSpeedRPM.owl_cls)
 
     assert not reasoner.check_compatibility(Helicopter_A, Helicopter_B)
-
     print(reasoner.explain_incompatibilities(Helicopter_A, Helicopter_B))
 
+if __name__ == '__main__':
+    test_logical_inconsistency()

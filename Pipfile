@@ -9,6 +9,7 @@ rdflib = "*"
 click = "*"
 owlready2 = "*"
 pytest = "*"
+requests = "*"
 
 [dev-packages]
 pydmsd = {path = ".", editable = true}

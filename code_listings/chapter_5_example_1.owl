@@ -1,0 +1,8 @@
+class RotorSpeed:
+  SubClassOf: dmsd:Observable
+
+Object: rotorSpeed
+  Domain: dmsd:HelicopterStatusMessage
+  Range: dmsd:RotorSpeed
+
+ class HelicopterStatusMessage:

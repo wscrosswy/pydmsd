@@ -9,7 +9,7 @@ from .types import Cardinality, Ontology, OntologyClass
 
 def run_reasoner(ontology: Ontology):
     """Run the HermiT reasoner on the given ontology."""
-    print("Running reasoner...")
+    print("Running FHIR Profile interoperability analysis...")
     with ontology.owl_ontology:
         owl.sync_reasoner()
 
@@ -54,14 +54,13 @@ def _get_closed_world_intersection(class1, class2):
     for prop in missing_from_1.union(missing_from_2):
         cwi.add_max_cardinality(prop, 0)
 
-    for prop in missing_from_1:
+    for prop in required2:
         cwi.add_max_cardinality(prop, 0)
 
     return cwi
 
 
 def check_compatibility(class1, class2) -> bool:
-    # TODO use singledispatch
     class1 = _unwrap_ontology_class(class1)
     class2 = _unwrap_ontology_class(class2)
     ontology = class1.ontology
@@ -99,12 +98,12 @@ def _explain_property_presence_conflicts(class1, class2):
     missing_from_2 = class1.required_properties - class2.declared_properties
     for prop in missing_from_2:
         missing.append(
-            f"{class1.name} requires property '{prop.name}' which is missing in {class2.name}."
+            f"{class1.name} requires element '{prop.name}' which is missing in {class2.name}."
         )
     missing_from_1 = class2.required_properties - class1.declared_properties
     for prop in missing_from_1:
         missing.append(
-            f"{class2.name} requires property '{prop.name}' which is missing in {class1.name}."
+            f"{class2.name} requires element '{prop.name}' which is missing in {class1.name}."
         )
     return missing
 
@@ -126,12 +125,12 @@ def _explain_cardinality_conflicts(class1, class2):
 
         if card2.max is not None and card1.min > card2.max:
             cardinality_conflicts.append(
-                f"Property {prop.name} has conflicting cardinality restrictions: "
+                f"Characteristic {prop.name} has conflicting cardinality restrictions: "
                 f"{class1.name} requires min {card1.min}, but {class2.name} requires max {card2.max}."
             )
         if card2.min is not None and card1.max is not None and card2.min > card1.max:
             cardinality_conflicts.append(
-                f"Property {prop.name} has conflicting cardinality restrictions: "
+                f"Characteristic {prop.name} has conflicting cardinality restrictions: "
                 f"{class2.name} requires min {card2.min}, but {class1.name} requires max {card1.max}."
             )
 
@@ -145,7 +144,7 @@ class IncompatibilityExplanation:
     property_presence_conflicts: ty.List[str]
 
     def __str__(self):
-        parts = ["Classes are disjoint due to:"]
+        parts = ["Profiles are incompatible due to:"]
         if self.explicit_disjoint_axioms:
             parts.append("  Explicit Disjointness Axioms:")
             for reason in self.explicit_disjoint_axioms:
@@ -155,7 +154,7 @@ class IncompatibilityExplanation:
             for reason in self.cardinality_conflicts:
                 parts.append(f"    - {reason}")
         if self.property_presence_conflicts:
-            parts.append("  Missing Required Properties:")
+            parts.append("  Missing Required Elements:")
             for reason in self.property_presence_conflicts:
                 parts.append(f"    - {reason}")
 

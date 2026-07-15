@@ -121,7 +121,7 @@ class Ontology:
         self.iri: str = iri
         self.owl_ontology: owl.Ontology =  owl.get_ontology(iri)
 
-        # Extand core OWL semantics to name Conceptual, Logical, and Platform concerns
+        # Expand core OWL semantics to name Conceptual, Logical, and Platform concerns
         # Conceptual
         self.observable = self.define_class("Observable")
 
@@ -129,7 +129,6 @@ class Ontology:
         self.measurement_system = self.define_class("MeasurementSystem")
         self.unit = self.define_class("Unit")
         self.has_unit = self.define_object_property("hasUnit", domain=self.measurement_system, range_=self.unit)
-        # TODO precision, using class hierarchy of precision values for range of hasPrecision object property
 
         # Platform
         self.integer_value_type = self.define_class("IntegerValueType")

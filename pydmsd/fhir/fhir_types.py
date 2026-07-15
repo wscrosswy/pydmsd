@@ -26,13 +26,12 @@ class Resource:
         self.ontology_class = self.model.ontology.define_class(name)
 
     def create_element(self, name, lower_bound, upper_bound, value_type):
-        """Each FHIR element maps to both a DMSD observable and and a DMDS property"""
+        """Each FHIR element maps to both a DMSD observable and a DMSD property"""
         # Create the underlying DMSD observable
-        # TODO is a period OK or does this need to be an underscore?
-        prop = self.model.ontology.define_observable(f"{self.name}.{name}")
+        prop = self.model.ontology.define_observable(f"{name}_obs")
 
         # Create the underlying ontology property and restrictions
-        owl_prop = self.model.ontology.define_object_property(f"{self.name}.{name}", range_=value_type.ontology_class)
+        owl_prop = self.model.ontology.define_object_property(f"{name}", range_=value_type.ontology_class)
         owl_range_type = value_type.ontology_class.owl_cls
 
         if lower_bound and upper_bound and lower_bound == upper_bound:
@@ -76,4 +75,9 @@ class FhirDataModel:
                 value_type=datatype,
             )
 
+        return resource
+
+    def create_profile_from_uri(self, uri: str, base_resource: Resource):
+        resource = self.create_resource_from_uri(uri)
+        resource.ontology_class.add_superclass(base_resource.ontology_class)
         return resource
